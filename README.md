@@ -16,3 +16,5 @@ fig5.py : Builds figure 5.
 fig6.py : Builds figure 6.
 
 fig6_files.pkl : Contains the matrices and initial conditions for the simulation underpinning figure 6.
+
+*Note that the PKL file is stored using Git-LFS*
