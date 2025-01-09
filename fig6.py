@@ -3,8 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
 import pickle
+import datetime
 
-def generate_str_matrix(mu,beta,nf,s):
+def generate_str_matrix(nf,s):
 
     # Number of species
     S = nf * s
@@ -33,7 +34,7 @@ def simulate(int_matrix,vec_init):
     glv.vec_x = vec_init
 
     try:
-        traj = glv.run(4000,4)
+        traj = glv.run(6000,4)
     except ecosim.base.DivergenceError as e:
         traj = e.traj
         print("Divergence")
@@ -93,7 +94,7 @@ def plot(sig_list,traj_list,plot_idx,nf,s):
     sp_var,grp_var = np.transpose([calculate_variation_amplitude(traj,traj_grp) for traj, traj_grp in zip(traj_list,traj_grp_list)])
 
     grp_colors,colors = randcolors(nf,s)
-    print(len(plot_idx))
+    
     fig,ax = plt.subplots(len(plot_idx)+1,2,figsize=(14,2.5+len(plot_idx)*2.5))
     fig.tight_layout(pad=1)
 
@@ -110,21 +111,21 @@ def plot(sig_list,traj_list,plot_idx,nf,s):
         ax[i,1].set_xlim(10,traj.T)
         ax[i,1].set_yticks([0,.3,.6,.9] if np.max(mat_x) > .8 else [0,.3,.6])
         ax[i,1].set_ylim(0,np.max(mat_x))
-        if i < len(traj_list) - 1:
+        if i < len(plot_idx) - 1:
             ax[i,0].get_xaxis().set_visible(False)
             ax[i,1].get_xaxis().set_visible(False)
         else:
-            ax[i,0].set_xticks([0,1000,2000,3000,4000])
-            ax[i,1].set_xticks([0,1000,2000,3000,4000])
+            ax[i,0].set_xticks([0,3000,6000])
+            ax[i,1].set_xticks([0,3000,6000])
             
         ax[i,0].tick_params(axis='both',labelsize=15)
         ax[i,1].tick_params(axis='both',labelsize=15)
         
-        if i == len(traj_list)-1:
-            ax[i,0].set_xlabel("Time")
-            ax[i,1].set_xlabel("Time")
-        ax[i,0].set_ylabel(r"$f_i(t)$")
-        ax[i,1].set_ylabel(r"$x_i(t)$")
+        if i == len(plot_idx)-1:
+            ax[i,0].set_xlabel("Time",fontsize =20)
+            ax[i,1].set_xlabel("Time",fontsize =20)
+        ax[i,0].set_ylabel(r"$f_i(t)$",fontsize =20)
+        ax[i,1].set_ylabel(r"$x_i(t)$",fontsize =20)
 
 
     gs = ax[-1, 1].get_gridspec()
@@ -140,39 +141,33 @@ def plot(sig_list,traj_list,plot_idx,nf,s):
     line_intra, = axbig.plot(np.sort(sig_list),sp_var, color = 'orange')
     axbig.scatter(np.sort(sig_list),sp_var,color = 'orange',s=60)
 
-    axbig.vlines(sig_list[plot_idx],-.1,1.1,linestyles='--',colors='black')
-    axbig.set_ylim(0,1.1)
-    axbig.set_xlim(-.1,2.8)
-    axbig.set_yticks([0,.5,1])
-    axbig.set_xticks([0,.5,1,1.5,2,2.5])
+    axbig.vlines(sig_list[plot_idx],-.1,10,linestyles='--',colors='black')
+    axbig.set_ylim(0,1.5)
+    axbig.set_xlim(-.1,3.2)
+    axbig.set_yticks([0,.6,1.2])
+    axbig.set_xticks([0,1,2,3])
     axbig.tick_params(axis='both',labelsize=15)
-    axbig.set_xlabel(r"$\sigma$")
-    axbig.set_ylabel("Fluctuation""\n""amplitude")
+    axbig.set_xlabel(r"$\sigma$",fontsize =20)
+    axbig.set_ylabel("Fluctuation""\n""amplitude",fontsize =20)
 
     axbig.legend(handles = [line_inter,line_intra],labels = ['Species level','Strain level'],fontsize = 16,loc = (.8,.45))
 
+    fig.savefig(f"fig6.svg")
     plt.show()
+    
 
 def main():
 
-    sig_list = np.array([0,1,1.25,1.35,1.5,1.65,1.75,1.85,2,2.25,2.5,2.75])
-    plot_idx = [0,1,6,11]
+    sig_list = np.array([0,1,1.5,1.75,2,2.25,2.5,3])
+    plot_idx = [0,2,4,7]
 
-    nf,s =  100,20
+    nf,s =  150,40
 
-    try:
-        with open('./fig6_files.pkl','rb') as file:
-            str_mat,rand_mat,vec_init = pickle.load(file)
-        print("Matrices loaded.")
-    except:
+    with open(f'./fig6_files.pkl','rb') as file:
+        load = pickle.load(file)
+        str_mat,rand_mat,vec_init = load
+    print("Matrices loaded.")
 
-        str_mat = generate_str_matrix(.5,.3,nf,s)
-        rand_mat = np.random.normal(0,1/np.sqrt(nf*s),(nf*s,nf*s))
-        vec_init = generate_vec_init(nf,s)
-
-        with open('./fig6_files.pkl','wb') as file:
-            pickle.dump([str_mat,rand_mat,vec_init],file)
-        print("Matrices not found. Generating new matrices")
 
     traj_list = []
     for sig in sig_list:
